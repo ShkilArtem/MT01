@@ -1,0 +1,9 @@
+quickdraw_cache/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.DS_Store
+remuse.pdf
+.venv/
+Slides_projet_Classification_dessins.pdf
+Projet_Python_version_detaillee.pdf
