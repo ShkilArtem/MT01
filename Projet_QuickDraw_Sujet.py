@@ -439,7 +439,24 @@ for h in h_values:
 def gradient_descent_fixed(f, gradf, theta0, alpha,
                            tol=1e-5, max_iter=1000):
     # TODO
-    ...
+    theta = theta0.copy()
+    loss_history = []
+    grad_norm_history = []
+
+    for k in range(max_iter):
+        current_loss = f(theta)
+        grad = gradf(theta)
+        grad_norm = np.linalg.norm(grad)
+
+        loss_history.append(current_loss)
+        grad_norm_history.append(grad_norm)
+
+        if grad_norm <= tol: 
+            return theta, loss_history, grad_norm_history, k + 1
+        theta -= alpha * grad
+
+    return theta, loss_history, grad_norm_history, 1000
+    
 
 # =================================================================
 # %% [markdown]
