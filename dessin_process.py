@@ -64,18 +64,18 @@ def paint_disk(bitmap, x, y, radius):
     # 1. Construire les coordonnées des pixels de la boîte.
     #    Vous pouvez utiliser np.ogrid.
     #
-    rr, cc = ...
+    rr, cc = np.ogrid[r0:r1, c0:c1]
 
     # 2. Construire un masque booléen correspondant aux pixels
     #    situés dans le disque :
     #
     # (ligne - y)^2 + (colonne - x)^2 <= radius^2
     #
-    mask = ...
+    mask = (rr - y)**2 + (cc - x)**2 <= radius**2
 
     # 3. Mettre les pixels correspondants à 1.
     #
-    bitmap[...] = ...
+    bitmap[r0:r1, c0:c1][mask] = 1
 
 
 #Complétez la fonction :
@@ -95,25 +95,25 @@ def paint_segment(bitmap, p0, p1, radius):
 
     # 1. Calculer la distance entre p0 et p1.
     #
-    distance = ...
+    distance = np.hypot(x1 - x0, y1 - y0)
 
     # 2. Choisir la distance maximale entre deux centres
     #    de disques successifs.
-    step = ...
+    step = radius*0.5
 
     # 3. Déterminer le nombre de points intermédiaires en utilisant ceil.
     #
-    n = max(2, int(...))
+    n = max(2, int(np.ceil(distance/step))+1)
 
     # 4. Construire les coordonnées interpolées avec np.linspace.
     #
-    xs = ...
-    ys = ...
+    xs = np.linspace(x0, x1, n)
+    ys = np.linspace(y0, y1, n)
 
     # 5. Dessiner un disque en chacun de ces points.
     #
     for x, y in zip(xs, ys):
-         paint_disk(...)
+         paint_disk(bitmap, x, y, radius)
 
 ## Pour tester vos fonctions
 def test_paint_disk():
@@ -162,8 +162,9 @@ def test_paint_segment():
     plt.title("Test de paint_segment")
     plt.axis("off")
     plt.show()
-
-    
+ 
+if __name__ == "__main__":
+    test_paint_segment()
 # =====================================================================
 # RECENTRAGE ET CONVERSION DES DONNÉES QUICKDRAW
 # =====================================================================
@@ -182,22 +183,25 @@ def compute_centering_parameters(width, height, size=28, margin=2):
 
     # Longueur disponible entre les deux marges.
     # Attention : les pixels sont indexes de 0 a size-1.
-    usable = ...  # TODO
+    usable = size - 2 * margin -1 # TODO
 
     if usable <= 0:
         raise ValueError("Marge trop grande.")
 
     # Choisir scale pour que :
     # max(width, height) * scale = usable
-    scale = ...   # TODO
+    t = max(width, height)
+    if t == 0 : 
+        raise ValueError("Image vide.")
+    scale = usable / t   # TODO
 
     # Dimensions du dessin apres redimensionnement
-    scaled_width = ...   # TODO
-    scaled_height = ...  # TODO
+    scaled_width = width * scale
+    scaled_height = height * scale
 
     # Decalage = marge + moitie de l'espace libre
-    offx = ...    # TODO
-    offy = ...    # TODO
+    offx = margin + (usable - scaled_width)/2    # TODO
+    offy = margin + (usable - scaled_height)/2    # TODO
 
     return scale, offx, offy
 
@@ -286,12 +290,12 @@ def image_converter(strokes, size=28, margin=2, radius=1.0):
         if len(points) >= 2:
             # Trait blanc 
             for p0, p1 in zip(points[:-1], points[1:]):
-                paint_segment(...)
+                paint_segment(bitmap, p0, p1, radius)
 
         # Sinon on crée un petit disque autour de (x,y)
         elif len(points) == 1:
             # petit disque
-            paint_disk(...)
+            paint_disk(bitmap, points[0][0], points[0][1], radius)
          
     return np.uint8(np.clip(bitmap, 0.0, 1.0) * 255)
 

@@ -361,7 +361,7 @@ def show_draw(
         %gui qt5
         pad = show_draw(...)
     """
-    get_qapp()
+    app = get_qapp()
 
     window = Draw(
         size=size,
@@ -369,6 +369,7 @@ def show_draw(
         classify_callback=classify_callback,
         title=title,
     )
+    window._qapp = app
 
     window.show()
     window.raise_()

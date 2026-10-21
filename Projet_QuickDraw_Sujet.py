@@ -27,12 +27,10 @@ dans un script Python standard.
 # %%
 # =================================================================
 
-# À exécuter UNE SEULE FOIS si PyQt5 n'est pas disponible :
-# pip install -U PyQt5
+# À exécuter UNE SEULE FOIS dans le notebook pour installer les dépendances :
+# JUPYTER: %pip install numpy matplotlib Pillow scikit-learn PyQt5 ipympl ipywidgets
+# Redémarrer ensuite le noyau avant d'exécuter les cellules suivantes.
 
-# Dans Jupyter, cette commande intègre la boucle événementielle Qt au notebook.
-# La fenêtre de dessin reste interactive sans bloquer l'exécution des cellules.
-# JUPYTER: %gui qt5
 
 # %%
 ## PACKAGES 
@@ -44,22 +42,19 @@ import urllib.request
 from pathlib import Path
 import importlib
 import numpy as np
-# JUPYTER: %matplotlib widget
-# JUPYTER: %gui qt5
+# JUPYTER: %matplotlib inline
 import matplotlib.pyplot as plt
 from PIL import Image
 
-#from sklearn.model_selection import train_test_split
-#from sklearn.metrics import (
-#    accuracy_score, confusion_matrix, precision_score,
-#    recall_score, log_loss
-#)
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    accuracy_score, confusion_matrix, precision_score,
+    recall_score, log_loss
+)
 
 import dessin_process
-import dessin_viewer
 
 importlib.reload(dessin_process)
-importlib.reload(dessin_viewer)
 
 # Même architecture que dans le TP2 :
 # - dessin_process.py : calculs et traitements d'images ;
@@ -88,10 +83,14 @@ rng = np.random.default_rng(RANDOM_STATE)
 # %%
 ## 1/ Choisissez votre problème ici
 
-PAIR = "..."  # "main-pied", "pingouin-perroquet", "oignon-ananas"
-N_PER_CLASS = ...
+PAIR = "oignon-ananas"  # "main-pied", "pingouin-perroquet", "oignon-ananas"
+N_PER_CLASS = 1000
 
-PAIRS = ...
+PAIRS = {
+    "main-pied": ("hand", "foot", "main", "pied"),
+    "pingouin-perroquet": ("penguin", "parrot", "pingouin", "perroquet"),
+    "oignon-ananas": ("onion", "pineapple", "oignon", "ananas"),
+}
 
 cat0, cat1, nom0, nom1 = PAIRS[PAIR]
 print(f"Problème choisi : {nom0} (Étiquette 0) / {nom1} (Étiquette 1)")
@@ -129,8 +128,8 @@ print(f"Problème choisi : {nom0} (Étiquette 0) / {nom1} (Étiquette 1)")
 # %%
 # =================================================================
 
-test_paint_disk()
-test_paint_segment()
+# dessin_process.test_paint_disk()
+# dessin_process.test_paint_segment()
 
 # %%
 # =================================================================
@@ -173,12 +172,12 @@ def load_quickdraw_category(category, n_samples=1200, force=False):
                 record = json.loads(line.decode("utf-8"))
 
                 # Conversion vectoriel -> bitmap assurée par dessin_process.py.
-                images.append(image_converter(record["drawing"]))
+                images.append(dessin_process.image_converter(record["drawing"]))
 
                 if len(images) >= n_samples:
                     break
 
-    except Exception as exc:
+    except (OSError, TimeoutError) as exc:
         raise RuntimeError(
             "Impossible de télécharger QuickDraw. Vérifiez la connexion internet. "
             "Une fois les fichiers mis en cache, les séances suivantes peuvent "
@@ -215,11 +214,11 @@ def load_pair(pair=PAIR, n_per_class=N_PER_CLASS):
 # %%
 # TODO — charger les données
 
-Ximg, y, class_names = ...
-print("Images :", ...)
-print("Etiquettes :", ...)
-print("Effectifs :", ...)
-print("Classes :", ...)
+Ximg, y, class_names = load_pair()
+print("Images :", Ximg)
+print("Etiquettes :", y)
+print("Effectifs :", len(Ximg))
+print("Classes :", class_names)
 
 # =================================================================
 # %% [markdown]
@@ -227,8 +226,16 @@ print("Classes :", ...)
 # Affichez au moins 16 dessins de chaque classe à l'aide de matplotlib
 
 # %%
-# TODO — afficher au moins 16 exemples de chaque classe
-# fig, axes = plt.subplots(...)
+for label, class_name in enumerate(class_names):
+    images = Ximg[y == label][:16]
+    fig, axes = plt.subplots(4, 4, figsize=(8, 8))
+    for ax, img in zip(axes.ravel(), images):
+        ax.imshow(img, cmap="gray")
+    for ax in axes.ravel():
+        ax.axis("off")
+    fig.suptitle(f"Classe {label} : {class_name}")
+    plt.tight_layout()
+    plt.show()
 
 # =================================================================
 # %% [markdown]
@@ -238,6 +245,19 @@ print("Classes :", ...)
 
 # %%
 # TODO — images moyennes et différence
+
+x0_bar = np.mean(Ximg[y==0], axis=0)
+x1_bar = np.mean(Ximg[y==1], axis=0)
+
+fig, axes = plt.subplots(1, 3, figsize=(10, 3))
+axes[0].imshow(x0_bar, cmap = "gray")
+axes[0].set_title(f"Mean : {nom0}")
+
+axes[1].imshow(x1_bar, cmap = "gray")
+
+im = axes[2].imshow(x1_bar - x0_bar, cmap = "bwr")
+plt.colorbar(im, ax=axes[2])
+plt.show()
 
 # =================================================================
 # %% [markdown]
@@ -474,13 +494,10 @@ theta0 = np.zeros(X_train_b.shape[1])
 fixed_results = {}
 for alpha in [0.01, 0.05, 0.1, 0.5]:
     fixed_results[alpha] = gradient_descent_fixed(
-        objective,
-        grad_objective,
-        X_train_b,
-        y_train,
+        f_train,
+        g_train,
         theta0,
         alpha=alpha,
-        lda=lmbda,
         tol=1e-4,
         max_iter=500
     )
@@ -654,7 +671,7 @@ def classify_my_bitmap(arr, theta=theta_star):
     # -------------------------------------------------------------
     # 1. Prétraitement
     # -------------------------------------------------------------
-    img28 = prepare_for_model(arr)
+    img28 = dessin_process.prepare_for_model(arr)
 
     # -------------------------------------------------------------
     # 2. Mise sous la forme attendue par le classifieur
@@ -722,13 +739,15 @@ def classify_my_bitmap(arr, theta=theta_star):
 # ================================================================
 # OUVRIR LA FENÊTRE QT
 # ================================================================
-# La commande %gui qt5 a été exécutée dans la cellule des imports.
+# Dans Jupyter, exécuter %gui qt5 avant cette cellule.
 # show_draw() crée la fenêtre, l'affiche et conserve QApplication.
 #
 # IMPORTANT : on conserve la fenêtre dans la variable pad afin qu'elle
 # ne soit pas détruite par le ramasse-miettes Python.
 
-pad = show_draw(
+import dessin_viewer
+
+pad = dessin_viewer.show_draw(
     size=280,
     brush=7,
     classify_callback=classify_my_bitmap,
@@ -752,7 +771,7 @@ pad = show_draw(
 
 # %%
 # Exemple avec une image externe :
-# my_img = load_png_as_bitmap("mon_dessin.png")
+# my_img = dessin_process.load_png_as_bitmap("mon_dessin.png")
 # classify_my_bitmap(my_img)
 
 # %% [markdown]
