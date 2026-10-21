@@ -226,16 +226,16 @@ print("Classes :", class_names)
 # Affichez au moins 16 dessins de chaque classe à l'aide de matplotlib
 
 # %%
-for label, class_name in enumerate(class_names):
-    images = Ximg[y == label][:16]
-    fig, axes = plt.subplots(4, 4, figsize=(8, 8))
-    for ax, img in zip(axes.ravel(), images):
-        ax.imshow(img, cmap="gray")
-    for ax in axes.ravel():
-        ax.axis("off")
-    fig.suptitle(f"Classe {label} : {class_name}")
-    plt.tight_layout()
-    plt.show()
+# for label, class_name in enumerate(class_names):
+#     images = Ximg[y == label][:16]
+#     fig, axes = plt.subplots(4, 4, figsize=(8, 8))
+#     for ax, img in zip(axes.ravel(), images):
+#         ax.imshow(img, cmap="gray")
+#     for ax in axes.ravel():
+#         ax.axis("off")
+#     fig.suptitle(f"Classe {label} : {class_name}")
+#     plt.tight_layout()
+#     plt.show()
 
 # =================================================================
 # %% [markdown]
@@ -249,15 +249,15 @@ for label, class_name in enumerate(class_names):
 x0_bar = np.mean(Ximg[y==0], axis=0)
 x1_bar = np.mean(Ximg[y==1], axis=0)
 
-fig, axes = plt.subplots(1, 3, figsize=(10, 3))
-axes[0].imshow(x0_bar, cmap = "gray")
-axes[0].set_title(f"Mean : {nom0}")
+# fig, axes = plt.subplots(1, 3, figsize=(10, 3))
+# axes[0].imshow(x0_bar, cmap = "gray")
+# axes[0].set_title(f"Mean : {nom0}")
 
-axes[1].imshow(x1_bar, cmap = "gray")
+# axes[1].imshow(x1_bar, cmap = "gray")
 
-im = axes[2].imshow(x1_bar - x0_bar, cmap = "bwr")
-plt.colorbar(im, ax=axes[2])
-plt.show()
+# im = axes[2].imshow(x1_bar - x0_bar, cmap = "bwr")
+# plt.colorbar(im, ax=axes[2])
+# plt.show()
 
 # =================================================================
 # %% [markdown]
@@ -270,7 +270,9 @@ plt.show()
 # TODO
 # X = ...
 # X_train, X_test, y_train, y_test = train_test_split(...)
+X = (Ximg/255).reshape(len(Ximg), -1)
 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, train_size=0.7, random_state=42)
 print(X_train.shape, X_test.shape)
 
 # =================================================================
@@ -291,16 +293,24 @@ print(X_train.shape, X_test.shape)
 # %%
 def add_bias(X):
     # TODO
-    ...
+    sample, feature = np.shape(X)
+    res = np.ones((sample, feature + 1), dtype=X.dtype)
+    res[:, :-1] = X
+    return res
+
 
 
 def sigmoid(z):
     # TODO 
-    ...
+    return 1/(1 + np.exp(-z))
 
 
 X_train_b = add_bias(X_train)
 X_test_b = add_bias(X_test)
+# print(sigmoid(0))
+# print(sigmoid(1))
+
+
 
 # =================================================================
 # %% [markdown]
@@ -343,12 +353,23 @@ X_test_b = add_bias(X_test)
 # %%
 def objective(theta, Xb, y, lmbda=1e-2):
     # TODO
-    ...
-
+    eps = 1e-15
+    p = sigmoid(np.dot(Xb, theta))
+    p = np.clip(p, eps, 1 - eps)
+    f_theta = - np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)) + lmbda * np.dot(theta[:-1], theta[:-1]) * 0.5
+    return f_theta
 
 def grad_objective(theta, Xb, y, lmbda=1e-2):
     # TODO
-    ...
+    eps = 1e-15
+    p = sigmoid(np.dot(Xb, theta))
+    p = np.clip(p, eps, 1 - eps)
+
+    w = np.copy(theta)
+    w[-1] = 0.0
+
+    grad_f = (np.transpose(Xb) @ (p - y)) / len(y) + lmbda * w
+    return grad_f
 
 # =================================================================
 # %% [markdown]
@@ -384,7 +405,20 @@ def finite_difference_gradient(f, theta, h=1e-6, indices=None):
 
 # TODO — comparer gradient analytique et gradient numérique
 
+theta_test = np.random.randn(X_test_b.shape[1]) * 0.01
+f = lambda t : objective(t, X_test_b, y_test)
 
+h_values = np.logspace(-1, -12, num=12)
+erreur = []
+test_indices = np.random.choice(theta_test.size, size=20, replace=False)
+go = grad_objective(theta_test, X_test_b, y_test)
+
+for h in h_values:
+    fdg  = finite_difference_gradient(f, theta_test, h, indices=test_indices)
+    
+    diff = np.abs(fdg[test_indices] - go[test_indices])
+    err_rel = np.linalg.norm(diff) / np.linalg.norm(go[test_indices])
+    print(f"h = {h:10.1e} | Erreur moyenne = {np.mean(diff):.2e} | Erreur relative = {err_rel:.2e}")
 
 # =================================================================
 # %% [markdown]
