@@ -528,22 +528,54 @@ alphas = [0.01, 0.05, 0.1, 0.5,1.,2.]
 #
 
 # %%
-# def armijo_step(f, gradf, theta, d,
-#                 alpha0=1.0, rho=0.5, c1=1e-4,
-#                 min_alpha=1e-12, f0=None, g0=None):
-#     # TODO
-#     return alpha, n_eval
+def armijo_step(f, gradf, theta, d,
+                alpha0=1.0, rho=0.5, c1=1e-4,
+                min_alpha=1e-12, f0=None, g0=None):
+    n_eval = 0
+    if f0 == None:
+        f0 = f(theta)
+    if g0 is None:
+        g0 = gradf(theta)
+    alpha = alpha0
+    while f(theta + alpha*d)>f0 + c1*alpha*np.dot(g0,d) and alpha >min_alpha:
+        alpha = rho*alpha
+        n_eval +=1
+    # TODO
+    return alpha, n_eval
 
 
-# def gradient_descent_armijo(f, gradf, theta0,
-#                             tol=1e-5, max_iter=1000,
-#                             alpha0=1.0, rho=0.5, c1=1e-4):
-#     # TODO
-#     return {
-#         "theta": theta, "f": np.array(hist_f), "grad_norm": np.array(hist_g),
-#         "alpha": np.array(hist_a), "iterations": k,
-#         "n_f_eval": n_f_eval, "time": elapsed
-#     }
+def gradient_descent_armijo(f, gradf, theta0,
+                            tol=1e-5, max_iter=1000,
+                            alpha0=1.0, rho=0.5, c1=1e-4):
+    theta = theta0.copy()
+    loss_history = []
+    alpha_history = []
+    grad_norm_history = []
+    n_f_eval = 0
+    start = time.time()
+    for k in range(max_iter):
+        current_loss = f(theta)
+        grad = gradf(theta)
+        grad_norm = np.linalg.norm(grad)
+
+        loss_history.append(current_loss)
+        grad_norm_history.append(grad_norm)
+        elapsed = time.time() - start
+        if grad_norm <= tol: 
+            return         {"theta": theta, "f": np.array(loss_history), "grad_norm": np.array(grad_norm_history),
+        "alpha": np.array(alpha_history), "iterations": k+1,
+        "n_f_eval": n_f_eval, "time": elapsed}
+        alpha,step_eval = armijo_step(f,gradf,theta,-grad,f0=current_loss,g0=grad)
+        alpha_history.append(alpha)
+        theta -= alpha*grad
+        n_f_eval+=step_eval+1
+        
+    # TODO
+    return {
+        "theta": theta, "f": np.array(loss_history), "grad_norm": np.array(grad_norm_history),
+        "alpha": np.array(alpha_history), "iterations": k+1,
+        "n_f_eval": n_f_eval, "time": elapsed
+    }
 
     
 # =================================================================
@@ -555,41 +587,53 @@ alphas = [0.01, 0.05, 0.1, 0.5,1.,2.]
 # - temps CPU ;
 # - valeur finale de $f$ ;
 # - norme finale du gradient.
+resultats_armi = gradient_descent_armijo(f, gradf, theta0)
+theta_armo = resultats_armi["theta"]
+loss_history_armi = resultats_armi["f"]
+grad_norm_armi = resultats_armi["grad_norm"]
+alpha_history_armi = resultats_armi["alpha"]
+iteration_armi = resultats_armi["iterations"]
+nf_eval_armi = resultats_armi["n_f_eval"]
+time_armi = resultats_armi["time"]
+grad_norm_finale_armi = grad_norm_armi[-1]
+loss_history_finale_armi = loss_history_armi[-1]
 # =================================================================
 # %%
-# lmbda = 1e-2
-# f_train = lambda th: objective(th, X_train_b, y_train, lmbda)
-# g_train = lambda th: grad_objective(th, X_train_b, y_train, lmbda)
-# theta0 = np.zeros(X_train_b.shape[1])
+lmbda = 1e-2
+f_train = lambda th: objective(th, X_train_b, y_train, lmbda)
+g_train = lambda th: grad_objective(th, X_train_b, y_train, lmbda)
+theta0 = np.zeros(X_train_b.shape[1])
+
 
 
 # # Quelques pas à comparer. 
-# fixed_results = {}
-# for alpha in [0.01, 0.05, 0.1, 0.5]:
-#     fixed_results[alpha] = gradient_descent_fixed(
-#         f_train,
-#         g_train,
-#         theta0,
-#         alpha=alpha,
-#         tol=1e-4,
-#         max_iter=500
-#     )
+fixed_results = {}
+for alpha in [0.01, 0.05, 0.1, 0.5]:
+    fixed_results[alpha] = gradient_descent_fixed(
+        f_train,
+        g_train,
+        theta0,
+        alpha=alpha,
+        tol=1e-4,
+        max_iter=500
+    )
 
-# armijo_result = gradient_descent_armijo(
-#     f_train, g_train, theta0, tol=1e-4, max_iter=500
-# )
+armijo_result = gradient_descent_armijo(
+    f_train, g_train, theta0, tol=1e-4, max_iter=500
+)
 # =================================================================
 # TODO: plot f for fixed alpha and armijo
 
-# for alpha, res in fixed_results.items():
-#     # TODO print performances
-#     pass
+for alpha, res in fixed_results.items():
+    # TODO print performances
+    pass
 # =================================================================
 # %% [markdown]
 # ## Avant l'évaluation du modèle, on retient le meilleur parametre $\theta^*$
 
 # %%
-# theta_star = ... #optimal parameter!
+theta_star = theta_armo #optimal parameter!
+print(theta_star)
 # =================================================================
 # %% [markdown]
 # ## 5. Évaluer et interpréter !!!
