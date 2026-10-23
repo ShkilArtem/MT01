@@ -405,20 +405,21 @@ def finite_difference_gradient(f, theta, h=1e-6, indices=None):
 
 # TODO — comparer gradient analytique et gradient numérique
 
-theta_test = np.random.randn(X_test_b.shape[1]) * 0.01
-f = lambda t : objective(t, X_test_b, y_test)
+theta_train = np.random.randn(X_train_b.shape[1]) * 0.01
+f = lambda t : objective(t, X_train_b, y_train)
+gradf = lambda theta : grad_objective(theta, X_train_b, y_train)
 
 h_values = np.logspace(-1, -12, num=12)
 erreur = []
-test_indices = np.random.choice(theta_test.size, size=20, replace=False)
-go = grad_objective(theta_test, X_test_b, y_test)
+test_indices = np.random.choice(theta_train.size, size=20, replace=False)
+go = grad_objective(theta_train, X_train_b, y_train)
 
-for h in h_values:
-    fdg  = finite_difference_gradient(f, theta_test, h, indices=test_indices)
+# for h in h_values:
+#     fdg  = finite_difference_gradient(f, theta_test, h, indices=test_indices)
     
-    diff = np.abs(fdg[test_indices] - go[test_indices])
-    err_rel = np.linalg.norm(diff) / np.linalg.norm(go[test_indices])
-    print(f"h = {h:10.1e} | Erreur moyenne = {np.mean(diff):.2e} | Erreur relative = {err_rel:.2e}")
+#     diff = np.abs(fdg[test_indices] - go[test_indices])
+#     err_rel = np.linalg.norm(diff) / np.linalg.norm(go[test_indices])
+#     print(f"h = {h:10.1e} | Erreur moyenne = {np.mean(diff):.2e} | Erreur relative = {err_rel:.2e}")
 
 # =================================================================
 # %% [markdown]
@@ -455,7 +456,7 @@ def gradient_descent_fixed(f, gradf, theta0, alpha,
             return theta, loss_history, grad_norm_history, k + 1
         theta -= alpha * grad
 
-    return theta, loss_history, grad_norm_history, 1000
+    return theta, loss_history, grad_norm_history, max_iter
     
 
 # =================================================================
@@ -479,10 +480,31 @@ theta0 = np.zeros(
 # =================================================================
 # Quelques pas à comparer
 fixed_results = {}
+alphas = [0.01, 0.05, 0.1, 0.5,1.,2.]
 
-for alpha in [0.01, 0.05, 0.1, 0.5,1.,2.]:
+# for alpha in alphas:
 
-    fixed_results[alpha] = ...
+#     fixed_results[alpha] = gradient_descent_fixed(f, gradf, theta0, alpha)
+
+# fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+# for alpha in alphas:
+#     loss = fixed_results[alpha][1]
+#     grad_norm = fixed_results[alpha][2]
+
+#     axes[0].plot(loss, label=f"α = {alpha}")
+#     axes[1].semilogy(grad_norm, label=f"alpha = {alpha}")
+
+# axes[0].set_ylabel("f(θ)")
+# axes[1].set_ylabel("‖∇f(θ)‖")
+
+# for ax in axes:
+#     ax.set_xlabel("Iteration")
+#     ax.legend()
+#     ax.grid(True)
+
+# plt.tight_layout()
+# plt.show()
 
 # TODO — tracer les historiques
 # =================================================================
@@ -506,22 +528,22 @@ for alpha in [0.01, 0.05, 0.1, 0.5,1.,2.]:
 #
 
 # %%
-def armijo_step(f, gradf, theta, d,
-                alpha0=1.0, rho=0.5, c1=1e-4,
-                min_alpha=1e-12, f0=None, g0=None):
-    # TODO
-    return alpha, n_eval
+# def armijo_step(f, gradf, theta, d,
+#                 alpha0=1.0, rho=0.5, c1=1e-4,
+#                 min_alpha=1e-12, f0=None, g0=None):
+#     # TODO
+#     return alpha, n_eval
 
 
-def gradient_descent_armijo(f, gradf, theta0,
-                            tol=1e-5, max_iter=1000,
-                            alpha0=1.0, rho=0.5, c1=1e-4):
-    # TODO
-    return {
-        "theta": theta, "f": np.array(hist_f), "grad_norm": np.array(hist_g),
-        "alpha": np.array(hist_a), "iterations": k,
-        "n_f_eval": n_f_eval, "time": elapsed
-    }
+# def gradient_descent_armijo(f, gradf, theta0,
+#                             tol=1e-5, max_iter=1000,
+#                             alpha0=1.0, rho=0.5, c1=1e-4):
+#     # TODO
+#     return {
+#         "theta": theta, "f": np.array(hist_f), "grad_norm": np.array(hist_g),
+#         "alpha": np.array(hist_a), "iterations": k,
+#         "n_f_eval": n_f_eval, "time": elapsed
+#     }
 
     
 # =================================================================
@@ -535,39 +557,39 @@ def gradient_descent_armijo(f, gradf, theta0,
 # - norme finale du gradient.
 # =================================================================
 # %%
-lmbda = 1e-2
-f_train = lambda th: objective(th, X_train_b, y_train, lmbda)
-g_train = lambda th: grad_objective(th, X_train_b, y_train, lmbda)
-theta0 = np.zeros(X_train_b.shape[1])
+# lmbda = 1e-2
+# f_train = lambda th: objective(th, X_train_b, y_train, lmbda)
+# g_train = lambda th: grad_objective(th, X_train_b, y_train, lmbda)
+# theta0 = np.zeros(X_train_b.shape[1])
 
 
-# Quelques pas à comparer. 
-fixed_results = {}
-for alpha in [0.01, 0.05, 0.1, 0.5]:
-    fixed_results[alpha] = gradient_descent_fixed(
-        f_train,
-        g_train,
-        theta0,
-        alpha=alpha,
-        tol=1e-4,
-        max_iter=500
-    )
+# # Quelques pas à comparer. 
+# fixed_results = {}
+# for alpha in [0.01, 0.05, 0.1, 0.5]:
+#     fixed_results[alpha] = gradient_descent_fixed(
+#         f_train,
+#         g_train,
+#         theta0,
+#         alpha=alpha,
+#         tol=1e-4,
+#         max_iter=500
+#     )
 
-armijo_result = gradient_descent_armijo(
-    f_train, g_train, theta0, tol=1e-4, max_iter=500
-)
+# armijo_result = gradient_descent_armijo(
+#     f_train, g_train, theta0, tol=1e-4, max_iter=500
+# )
 # =================================================================
 # TODO: plot f for fixed alpha and armijo
 
-for alpha, res in fixed_results.items():
-    # TODO print performances
-    pass
+# for alpha, res in fixed_results.items():
+#     # TODO print performances
+#     pass
 # =================================================================
 # %% [markdown]
 # ## Avant l'évaluation du modèle, on retient le meilleur parametre $\theta^*$
 
 # %%
-theta_star = ... #optimal parameter!
+# theta_star = ... #optimal parameter!
 # =================================================================
 # %% [markdown]
 # ## 5. Évaluer et interpréter !!!
@@ -577,14 +599,25 @@ theta_star = ... #optimal parameter!
 # %%
 def predict_proba(theta, Xb):
     # TODO
-    ...
+    return sigmoid(Xb @ theta)
 
 
 def predict(theta, Xb, threshold=0.5):
     # TODO
-    ...
+    return (predict_proba(theta, Xb) >= threshold).astype(int)
 # =================================================================
 # TODO — métriques sur le test
+theta, loss_history, grad_history, iterations = gradient_descent_fixed(f, gradf, theta0, 0.1)
+
+p_test = predict_proba(theta, X_test_b)
+y_pred = predict(theta, X_test_b)
+
+accuracy = accuracy_score(y_test, y_pred)
+matrice_confusion = confusion_matrix(y_test, y_pred, labels = [0,1])
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+
+print(f"accuracy = {accuracy},  \n matrice_confusion = {matrice_confusion}, \n precision = {precision}, \n recall = {recall}")
 # =================================================================
 # %% [markdown]
 # ### 5.2 Dessins mals classés
@@ -612,24 +645,38 @@ def show_indices(indices, title, max_n=12):
         ax.axis("off")
     fig.suptitle(title)
     plt.tight_layout()
+    plt.show()
 
 wrong = np.where(y_pred != y_test)[0]
-show_indices(wrong, "Exemples mal classés")
+# show_indices(wrong, "Exemples mal classés")
 
 ambiguous = np.argsort(np.abs(p_test - 0.5))
-show_indices(ambiguous, "Dessins les plus ambigus")
+# show_indices(ambiguous, "Dessins les plus ambigus")
 
 if len(wrong):
     confident_wrong = wrong[np.argsort(-np.abs(p_test[wrong]-0.5))]
-    show_indices(confident_wrong, "Erreurs les plus confiantes")
+    # show_indices(confident_wrong, "Erreurs les plus confiantes")
 # =================================================================
 # %% [markdown]
 # ### 5.3 Visualiser le vecteur $w$
 # Remettez $w\in\mathbb{R}^{784}$ sous forme d'une image $28\times28$. Les coefficients positifs favorisent la classe 1, les négatifs la classe 0. Comparez cette carte à $\bar x_1-\bar x_0$.
 
 # %%
-w = ...
-fig, axes = plt.subplots(...)
+w = theta[:-1].reshape(28,28)
+fig, axes = plt.subplots(1,2, figsize = (10, 4))
+difference = x1_bar - x0_bar
+
+for ax, image, title in zip(axes, 
+                     [w, difference], 
+                     ["Weight w", "Moyenne de classe 1 et de classe 0"]):
+    limit = max(float(np.max(np.abs(image))), 1e-15)
+    im = ax.imshow(image, cmap = "bwr")
+    ax.set_title(title)
+    ax.axis("off")
+    fig.colorbar(im, ax=ax)
+
+plt.tight_layout()
+plt.show()
 
 # %% [markdown]
 # ### 5.4 Comparaison à sklearn
@@ -638,6 +685,13 @@ fig, axes = plt.subplots(...)
 # =================================================================
 # %%
 from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression(C=0.07, max_iter=10000)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+accuracy = model.score(X_test, y_test)
+print(f"Accuracy = {accuracy:.4f}")  
+print("confusion_matrix = \n", confusion_matrix(y_test, y_pred))
 
 # %% [markdown]
 # ## 6. Défi — dessinez vous-même avec Qt
