@@ -651,17 +651,17 @@ def predict(theta, Xb, threshold=0.5):
     return (predict_proba(theta, Xb) >= threshold).astype(int)
 # =================================================================
 # TODO — métriques sur le test
-theta, loss_history, grad_history, iterations = gradient_descent_fixed(f, gradf, theta0, 0.1)
+# theta, loss_history, grad_history, iterations = gradient_descent_fixed(f, gradf, theta0, 0.1)
 
-p_test = predict_proba(theta, X_test_b)
-y_pred = predict(theta, X_test_b)
+# p_test = predict_proba(theta, X_test_b)
+# y_pred = predict(theta, X_test_b)
 
-accuracy = accuracy_score(y_test, y_pred)
-matrice_confusion = confusion_matrix(y_test, y_pred, labels = [0,1])
-precision = precision_score(y_test, y_pred)
-recall = recall_score(y_test, y_pred)
+# accuracy = accuracy_score(y_test, y_pred)
+# matrice_confusion = confusion_matrix(y_test, y_pred, labels = [0,1])
+# precision = precision_score(y_test, y_pred)
+# recall = recall_score(y_test, y_pred)
 
-print(f"accuracy = {accuracy},  \n matrice_confusion = {matrice_confusion}, \n precision = {precision}, \n recall = {recall}")
+# print(f"accuracy = {accuracy},  \n matrice_confusion = {matrice_confusion}, \n precision = {precision}, \n recall = {recall}")
 # =================================================================
 # %% [markdown]
 # ### 5.2 Dessins mals classés
@@ -691,14 +691,14 @@ def show_indices(indices, title, max_n=12):
     plt.tight_layout()
     plt.show()
 
-wrong = np.where(y_pred != y_test)[0]
-# show_indices(wrong, "Exemples mal classés")
+# wrong = np.where(y_pred != y_test)[0]
+# # show_indices(wrong, "Exemples mal classés")
 
-ambiguous = np.argsort(np.abs(p_test - 0.5))
-# show_indices(ambiguous, "Dessins les plus ambigus")
+# ambiguous = np.argsort(np.abs(p_test - 0.5))
+# # show_indices(ambiguous, "Dessins les plus ambigus")
 
-if len(wrong):
-    confident_wrong = wrong[np.argsort(-np.abs(p_test[wrong]-0.5))]
+# if len(wrong):
+#     confident_wrong = wrong[np.argsort(-np.abs(p_test[wrong]-0.5))]
     # show_indices(confident_wrong, "Erreurs les plus confiantes")
 # =================================================================
 # %% [markdown]
@@ -706,21 +706,21 @@ if len(wrong):
 # Remettez $w\in\mathbb{R}^{784}$ sous forme d'une image $28\times28$. Les coefficients positifs favorisent la classe 1, les négatifs la classe 0. Comparez cette carte à $\bar x_1-\bar x_0$.
 
 # %%
-w = theta[:-1].reshape(28,28)
-fig, axes = plt.subplots(1,2, figsize = (10, 4))
-difference = x1_bar - x0_bar
+# w = theta[:-1].reshape(28,28)
+# fig, axes = plt.subplots(1,2, figsize = (10, 4))
+# difference = x1_bar - x0_bar
 
-for ax, image, title in zip(axes, 
-                     [w, difference], 
-                     ["Weight w", "Moyenne de classe 1 et de classe 0"]):
-    limit = max(float(np.max(np.abs(image))), 1e-15)
-    im = ax.imshow(image, cmap = "bwr")
-    ax.set_title(title)
-    ax.axis("off")
-    fig.colorbar(im, ax=ax)
+# for ax, image, title in zip(axes, 
+#                      [w, difference], 
+#                      ["Weight w", "Moyenne de classe 1 et de classe 0"]):
+#     limit = max(float(np.max(np.abs(image))), 1e-15)
+#     im = ax.imshow(image, cmap = "bwr")
+#     ax.set_title(title)
+#     ax.axis("off")
+#     fig.colorbar(im, ax=ax)
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
 # %% [markdown]
 # ### 5.4 Comparaison à sklearn
@@ -728,14 +728,14 @@ plt.show()
 # utilisez `LogisticRegression` comme référence et comparez les performances. Les conventions de régularisation peuvent différer.
 # =================================================================
 # %%
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 
-model = LogisticRegression(C=0.07, max_iter=10000)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-accuracy = model.score(X_test, y_test)
-print(f"Accuracy = {accuracy:.4f}")  
-print("confusion_matrix = \n", confusion_matrix(y_test, y_pred))
+# model = LogisticRegression(C=0.07, max_iter=10000)
+# model.fit(X_train, y_train)
+# y_pred = model.predict(X_test)
+# accuracy = model.score(X_test, y_test)
+# print(f"Accuracy = {accuracy:.4f}")  
+# print("confusion_matrix = \n", confusion_matrix(y_test, y_pred))
 
 # %% [markdown]
 # ## 6. Défi — dessinez vous-même avec Qt
@@ -832,7 +832,7 @@ def classify_my_bitmap(arr, theta=theta_star):
     # -------------------------------------------------------------
     # 3. Probabilité et prédiction
     # -------------------------------------------------------------
-    p = float(...) #TODO
+    p = float(predict_proba(theta, xb)[0]) #TODO
     pred = int(p >= 0.5)
 
     # -------------------------------------------------------------
@@ -902,6 +902,8 @@ pad = dessin_viewer.show_draw(
     classify_callback=classify_my_bitmap,
     title=f"QuickDraw — {class_names[0]} / {class_names[1]}",
 )
+
+pad._qapp.exec_()
 
 # %% [markdown]
 # ### Variante : charger un dessin PNG
