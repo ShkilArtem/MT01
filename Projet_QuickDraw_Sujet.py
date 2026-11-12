@@ -607,16 +607,16 @@ theta0 = np.zeros(X_train_b.shape[1])
 
 
 # # Quelques pas à comparer. 
-fixed_results = {}
-for alpha in [0.01, 0.05, 0.1, 0.5]:
-    fixed_results[alpha] = gradient_descent_fixed(
-        f_train,
-        g_train,
-        theta0,
-        alpha=alpha,
-        tol=1e-4,
-        max_iter=500
-    )
+# fixed_results = {}
+# for alpha in [0.01, 0.05, 0.1, 0.5]:
+#     fixed_results[alpha] = gradient_descent_fixed(
+#         f_train,
+#         g_train,
+#         theta0,
+#         alpha=alpha,
+#         tol=1e-4,
+#         max_iter=500
+#     )
 
 armijo_result = gradient_descent_armijo(
     f_train, g_train, theta0, tol=1e-4, max_iter=500
@@ -633,7 +633,7 @@ for alpha, res in fixed_results.items():
 
 # %%
 theta_star = theta_armo #optimal parameter!
-print(theta_star)
+# print(theta_star)
 # =================================================================
 # %% [markdown]
 # ## 5. Évaluer et interpréter !!!
@@ -894,16 +894,16 @@ def classify_my_bitmap(arr, theta=theta_star):
 # IMPORTANT : on conserve la fenêtre dans la variable pad afin qu'elle
 # ne soit pas détruite par le ramasse-miettes Python.
 
-import dessin_viewer
+# import dessin_viewer
 
-pad = dessin_viewer.show_draw(
-    size=280,
-    brush=7,
-    classify_callback=classify_my_bitmap,
-    title=f"QuickDraw — {class_names[0]} / {class_names[1]}",
-)
+# pad = dessin_viewer.show_draw(
+#     size=280,
+#     brush=7,
+#     classify_callback=classify_my_bitmap,
+#     title=f"QuickDraw — {class_names[0]} / {class_names[1]}",
+# )
 
-pad._qapp.exec_()
+# pad._qapp.exec_()
 
 # %% [markdown]
 # ### Variante : charger un dessin PNG
@@ -934,4 +934,54 @@ pad._qapp.exec_()
 
 # %%
 
+# from sklearn.neural_network import MLPClassifier
+# from sklearn.metrics import log_loss, accuracy_score
 
+# mlp = MLPClassifier(
+#     hidden_layer_sizes=(3,),
+#     activation = "logistic",
+#     solver = "adam",
+#     alpha = 1e-4,
+#     max_iter = 1000, 
+#     random_state = 42
+# )
+
+# mlp.fit(X_train, y_train)
+
+# p_train = mlp.predict_proba(X_train)[:, 1]
+# p_test_nn = mlp.predict_proba(X_test)[:, 1]
+
+# print("Log-loss train:", log_loss(y_train, p_train))
+# print("Log-loss test:", log_loss(y_test, p_test_nn))
+# print("Accuracy test:", accuracy_score(
+#     y_test, mlp.predict(X_test)
+# ))
+
+
+
+
+class NN:
+    def __init__(
+        self,
+        X_train, y_train,
+        X_test, y_test,
+        validations=None,
+        number_of_layer=1,
+        number_of_hidden_neurals_per_layer=3,
+        alpha=1e-4,
+        nb_pixels=28
+    ):
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_test = X_test
+        self.y_test = y_test
+
+        self.validations = validations
+        self.number_of_layer = number_of_layer
+        self.number_of_hidden_neurals_per_layer = number_of_hidden_neurals_per_layer
+        self.alpha = alpha
+        self.nb_pixels = nb_pixels
+
+        self.model = None
+        self.w_opt = None
+        self.b_opt = None
